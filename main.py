@@ -1,23 +1,47 @@
 import requests
 
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "llama3"
+
+
 def chat(prompt):
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": "llama3",
-            "prompt": prompt,
-            "stream": False
-        }
-    )
-    return response.json()["response"]
+    try:
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": MODEL,
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=60
+        )
 
-print("Furkan AI Assistant başlatıldı (exit yaz çıkış)")
+        if response.status_code != 200:
+            return "Model çalışmıyor. Ollama açık mı?"
 
-while True:
-    user = input("Sen: ")
+        return response.json().get("response", "Cevap alınamadı.")
 
-    if user.lower() == "exit":
-        break
+    except requests.exceptions.ConnectionError:
+        return "Ollama bağlantısı yok. Lütfen Ollama'yı başlat."
 
-    answer = chat(user)
-    print("AI:", answer)
+    except Exception as e:
+        return f"Hata oluştu: {str(e)}"
+
+
+def main():
+    print("\n🤖 Furkan AI Assistant (Local)")
+    print("Çıkış: exit\n")
+
+    while True:
+        user = input("Sen: ")
+
+        if user.lower() == "exit":
+            print("Çıkılıyor...")
+            break
+
+        answer = chat(user)
+        print("AI:", answer)
+
+
+if __name__ == "__main__":
+    main()
